@@ -1,12 +1,13 @@
 require("dotenv").config();
 const {MongoClient} = require("mongodb");
 
-async function consultarCliente() {
+async function ejecutarConsultas() {
     const clienteMongo = new MongoClient(process.env.MONGODB_URI);
     try{
         await clienteMongo.connect();
         const base = clienteMongo.db("tienda_tecnologia");
-        const resultado = await base.collection("ventas").aggregate([
+        // 1) Cuánto gastó cada cliente en total
+        const totalPorCliente = await base.collection("ventas").aggregate([
             {$unwind: "$articulos"},
             {
                 $group:{
@@ -33,9 +34,13 @@ async function consultarCliente() {
                 nombre: "$cliente.nombre",
                 totalGastado:1,
             }
-        }
+        },
+        {$sort: {totalGastado: -1}},
         ]).toArray();
-        console.dir(resultado, {depth: null});
+        console.log("=== Total gastado por cliente ===");
+        console.dir(totalPorCliente, {depth: null});
+
+        // 2) Cuántas unidades se vendieron de cada producto
         const unidadesPorProducto = await base.collection("ventas").aggregate([
             {$unwind: "$articulos"},
             {
@@ -44,7 +49,7 @@ async function consultarCliente() {
                     unidadesVendidas: {$sum: "$articulos.cantidad"},
                 },
             },
-            {$sort: {unidadesVendidas:- 1}},
+            {$sort: {unidadesVendidas: -1}},
             {
                 $lookup:{
                 from:"productos",
@@ -65,9 +70,11 @@ async function consultarCliente() {
 
 
         ]).toArray();
+        console.log("=== Productos mas vendidos ===");
         console.dir(unidadesPorProducto, {depth: null});
         
-        const articulosConProducto = await base.collection("ventas").aggregate([
+        // 3) Cuánta plata se vendió en cada categoría
+        const totalPorCategoria = await base.collection("ventas").aggregate([
 
             {$unwind: "$articulos"},
             {
@@ -94,8 +101,10 @@ async function consultarCliente() {
                 categoria:"$_id",
                 totalVendido:1,
             }},
+            {$sort: {totalVendido: -1}},
         ]).toArray();
-        console.dir(articulosConProducto, {depth: null})
+        console.log("=== Total vendido por categoria ===");
+        console.dir(totalPorCategoria, {depth: null});
         
         
         
@@ -104,7 +113,7 @@ async function consultarCliente() {
         await clienteMongo.close();
     }
 }
-consultarCliente().catch(error =>{
-    console.error("no se pudo consultar el cliente: ", error.message);
+ejecutarConsultas().catch(error =>{
+    console.error("No se pudieron ejecutar las consultas:", error.message);
     
 }) 

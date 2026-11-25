@@ -30,7 +30,7 @@ Hace falta tener Node.js instalado y MongoDB local en funcionamiento. Abri Power
    node .\cargar-datos.js
    ```
 
-   Este paso se hace una vez sobre la base `tienda_tecnologia` vacia. Si ya cargaste los datos, segui directamente con las consultas porque los identificadores se repetirian.
+   El script borra los datos anteriores y los vuelve a cargar, asi que se puede correr las veces que haga falta.
 
 4. Ejecuta las consultas
 
@@ -42,7 +42,7 @@ Hace falta tener Node.js instalado y MongoDB local en funcionamiento. Abri Power
 
 - `clientes` guarda el ID, nombre, correo y ciudad de cada cliente
 - `productos` guarda el ID, nombre, categoria y precio actual de cada producto
-- `ventas` guarda el ID de la venta, el ID del cliente y la lista de articulos. Cada articulo tiene el ID del producto, la cantidad y el precio por unidad
+- `ventas` guarda el ID de la venta, el ID del cliente, la fecha y la lista de articulos. Cada articulo tiene el ID del producto, la cantidad y el precio por unidad
 
 En la venta guardamos el `clienteId` para poder buscar al cliente en su coleccion. Hacemos algo parecido con `productoId` para buscar el nombre y la categoria del producto.
 

@@ -1,5 +1,5 @@
 require("dotenv").config();
-const {mongoClient, MongoClient} = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 async function cargarDatos() {
   const clienteMongo = new MongoClient(process.env.MONGODB_URI);
@@ -7,6 +7,11 @@ async function cargarDatos() {
   try {
     await clienteMongo.connect();
     const base = clienteMongo.db("tienda_tecnologia");
+
+    // Borramos lo que haya antes de cargar, así el script se puede correr varias veces
+    await base.collection("clientes").deleteMany({});
+    await base.collection("productos").deleteMany({});
+    await base.collection("ventas").deleteMany({});
 
     await base.collection("clientes").insertMany(clientes);
     await base.collection("productos").insertMany(productos);
@@ -34,13 +39,14 @@ const clientes = [
   }
   
 ]
+const ciudades = ["Avellaneda", "Lanus", "Quilmes", "Lomas de Zamora", "Banfield"];
 for (let numero = 3; numero <= 30; numero++){
   const codigo = String(numero).padStart(3,"0");
   clientes.push({
     _id: `cliente-${codigo}`,
     nombre: `Cliente ${numero}`,
-    email: `cliente ${codigo}@example.com`,
-    ciudad: "Avellaneda"
+    email: `cliente${codigo}@example.com`,
+    ciudad: ciudades[numero % ciudades.length]
   });
 }
 
@@ -55,7 +61,7 @@ const productos = [
 const modelos = [
   {nombre: "Mouse", categoria: "Perifericos", precio: 12000},
   {nombre: "Monitor", categoria: "Pantallas", precio: 150000},
-  {nombre: "Disco SDD", categoria: "Almacenamiento", precio: 45000}
+  {nombre: "Disco SSD", categoria: "Almacenamiento", precio: 45000}
   
 ];
 for(let numero = 2; numero<=30; numero++){
@@ -76,6 +82,7 @@ const ventas = [
   {
     _id: 'venta-001',
     clienteId: 'cliente-001',
+    fecha: new Date(2026, 10, 22),
     articulos: [
       {
         productoId: 'producto-001',
@@ -87,6 +94,7 @@ const ventas = [
   {
     _id: "venta-002",
     clienteId: "cliente-001",
+    fecha: new Date(2026, 10, 23),
     articulos:[{ 
       productoId: mouse._id,
       cantidad: 1,
@@ -108,9 +116,12 @@ for (let numero = 3; numero <= 30; numero++){
   ventas.push({
     _id: `venta-${codigo}`,
     clienteId: cliente._id,
+    // El mes va de 0 a 11 (0 es enero), así que con % 11 quedan fechas de enero a noviembre
+    fecha: new Date(2026, numero % 11, 10),
     articulos: [{
       productoId: producto._id,
-      cantidad: 1,
+      // Cantidad de 1 a 3 para que las consultas no den todo igual
+      cantidad: (numero % 3) + 1,
       precioUnitario: producto.precio
     }]
   });
